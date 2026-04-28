@@ -17,6 +17,15 @@ def render_grid_with_edit(
     Reusable component for "Select -> Edit -> Distinction -> Save" pattern.
     """
     
+    if df.empty:
+        st.info("데이터가 없습니다.")
+        return
+        
+    total_count = len(df)
+    if total_count > 100:
+        st.caption(f"⚡ 성능 최적화(빠른 전체 선택)를 위해 최근 100건만 표시됩니다. (전체 {total_count}건)")
+        df = df.head(100)
+
     # Session State keys for this grid
     grid_key = f"grid_{label}"
     edit_mode_key = f"edit_mode_{label}"
@@ -114,18 +123,18 @@ def render_grid_with_edit(
         ac1, ac2, ac3, ac4, spacer = st.columns([1.2, 1.2, 1.2, 1.2, 5], gap="small")
         
         with ac1:
-            if st.button("✅ 전체 선택", key=f"sel_all_{label}", use_container_width=True):
+            if st.button("✅ 전체", key=f"sel_all_{label}", use_container_width=True):
                 st.session_state[select_all_key] = True
                 if f"grid_read_{label}" in st.session_state: del st.session_state[f"grid_read_{label}"]
                 st.rerun()
         with ac2:
-            if st.button("⬜ 선택 해제", key=f"desel_all_{label}", use_container_width=True):
+            if st.button("⬜ 해제", key=f"desel_all_{label}", use_container_width=True):
                 st.session_state[select_all_key] = False
                 if f"grid_read_{label}" in st.session_state: del st.session_state[f"grid_read_{label}"]
                 st.rerun()
         
         with ac3:
-            if st.button("🛠️ 변경", key=f"btn_edit_{label}", disabled=not has_sel_pre, use_container_width=True):
+            if st.button("🛠️ 수정", key=f"btn_edit_{label}", disabled=not has_sel_pre, use_container_width=True):
                 st.session_state[f"trigger_edit_{label}"] = True
                 
         with ac4:

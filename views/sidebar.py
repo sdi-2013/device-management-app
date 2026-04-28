@@ -49,8 +49,9 @@ def render_navigation():
     
     /* 2. 모바일 환경 (768px 이하) */
     @media (max-width: 768px) {
-        /* 좌측 햄버거 메뉴 및 사이드바 완전 숨김 */
-        [data-testid="collapsedControl"] { display: none !important; }
+        /* 좌측 햄버거 메뉴 및 사이드바 완전 숨김 (삼성브라우저 < 버튼 툴팁 제거 위함) */
+        [data-testid="collapsedControl"], 
+        [data-testid="stSidebarCollapsedControl"] { display: none !important; }
         [data-testid="stSidebar"] { display: none !important; }
         
         /* 모바일 컨텐츠 하단 여백 확보 (네비바에 가리지 않게) */
@@ -84,7 +85,7 @@ def render_navigation():
         div[data-testid="stHorizontalBlock"]:has(.bottom-nav-marker) > div[data-testid="stColumn"] {
             position: relative;
             margin: 0 !important;
-            padding: 5px 0 !important;
+            padding: 0 !important;
             display: flex;
             flex-direction: column;
             align-items: center;

@@ -15,20 +15,22 @@ def render_inspection():
     # --- 2. Search / Scan Section ---
     target_asset = None
     
-    tab1, tab2 = st.tabs(["🔍 통합 검색", "📸 QR 스캔"])
+    st.markdown("### 🔍 장비 통합 검색")
     
-    with tab1:
-        assets = AssetService.get_all_assets()
-        if not assets.empty:
-            # Create Label
-            assets['search_label'] = assets.apply(lambda x: f"[{x['id']}] {x['model']} ({x['status']}) - {x['location']}", axis=1)
-            
-            # Text Input for Search
-            sc1, sc2 = st.columns([8, 2], gap="small")
-            search_query_raw = sc1.text_input("장비 검색", placeholder="ID, 모델, 위치 등 (예: 0048)", label_visibility="collapsed")
-            do_search = sc2.button("검색", type="primary", use_container_width=True)
-            
-            st.caption("💡 검색어 입력 후 'Enter' 또는 '검색' 버튼을 누르세요.")
+    from modules.utils import get_chosung
+    assets = AssetService.get_all_assets()
+    if not assets.empty:
+        # Create Label
+        assets['search_label'] = assets.apply(lambda x: f"[{x['id']}] {x['model']} ({x['status']}) - {x['location']}", axis=1)
+        assets['model_chosung'] = assets['model'].apply(lambda x: get_chosung(str(x)) if x else "")
+        assets['location_chosung'] = assets['location'].apply(lambda x: get_chosung(str(x)) if x else "")
+        
+        # Text Input for Search
+        sc1, sc2 = st.columns([9, 1], gap="small")
+        search_query_raw = sc1.text_input("장비 검색", placeholder="ID, 모델(초성), 위치 등 (예: 0048, ㅍㅂ)", label_visibility="collapsed")
+        do_search = sc2.button("🔍", type="primary", use_container_width=True, help="검색")
+        
+        st.caption("💡 검색어 입력 후 'Enter' 또는 돋보기 버튼을 누르세요.")
             
             # Use raw query
             search_query = search_query_raw
@@ -39,15 +41,19 @@ def render_inspection():
             
             if search_query:
                 # Filter Logic
-                # 1. Exact ID
                 exact_match = assets[assets['id'] == search_query]
-                # 2. Contains ID
                 id_match = assets[assets['id'].str.contains(search_query, case=False) & (assets['id'] != search_query)]
-                # 3. Contains Others (Model, Location)
                 other_match = assets[assets['search_label'].str.contains(search_query, case=False) & ~assets['id'].str.contains(search_query, case=False)]
                 
+                # Chosung Logic
+                chosung_query = get_chosung(search_query)
+                chosung_match = pd.DataFrame()
+                if chosung_query:
+                    mask = (assets['model_chosung'].str.contains(chosung_query, case=False)) | (assets['location_chosung'].str.contains(chosung_query, case=False))
+                    chosung_match = assets[mask]
+                
                 # Concatenate with priority
-                filtered_assets = pd.concat([exact_match, id_match, other_match])
+                filtered_assets = pd.concat([exact_match, id_match, other_match, chosung_match])
                 
                 # Remove duplicates just in case
                 filtered_assets = filtered_assets.drop_duplicates(subset=['id'])
@@ -95,24 +101,8 @@ def render_inspection():
                         target_asset = assets[assets['id'] == selected_id].iloc[0]
                     elif len(filtered_assets) == 1 and search_query:
                          pass
-            else:
-                if search_query: st.warning("검색 결과가 없습니다.")
-                
-    with tab2:
-        img_file = st.camera_input("QR 코드를 비춰주세요")
-        if img_file:
-            try:
-                file_bytes = np.asarray(bytearray(img_file.read()), dtype=np.uint8)
-                img = cv2.imdecode(file_bytes, 1)
-                detector = cv2.QRCodeDetector()
-                data, bbox, _ = detector.detectAndDecode(img)
-                if data:
-                    assets = AssetService.get_all_assets({'id': data})
-                    if not assets.empty:
-                        target_asset = assets.iloc[0]
-                        st.success(f"QR 인식 성공: {data}")
-                    else: st.error(f"등록되지 않은 장비입니다: {data}")
-            except Exception as e: st.error(f"QR 스캔 오류: {e}")
+        else:
+            if search_query: st.warning("검색 결과가 없습니다.")
 
     # --- 3. Inspection Action Section ---
     if target_asset is not None:
