@@ -44,6 +44,34 @@ class AuthManager:
         return token
 
     @staticmethod
+    def logout():
+        token = None
+        try:
+            import streamlit as st
+            token = st.query_params.get("token")
+        except Exception:
+            pass
+            
+        if token:
+            conn = get_connection()
+            try:
+                c = conn.cursor()
+                c.execute("DELETE FROM sessions WHERE token = %s", (token,))
+                conn.commit()
+            except Exception:
+                pass
+            finally:
+                conn.close()
+                
+        try:
+            import streamlit as st
+            st.session_state.logged_in = False
+            st.session_state.user_info = {}
+            st.query_params.clear()
+        except Exception:
+            pass
+
+    @staticmethod
     def validate_session(token):
         if not token: return None
         conn = get_connection()
