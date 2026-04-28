@@ -1,0 +1,23 @@
+[
+    {
+        "id": "admin",
+        "password": "hdweld@123",
+        "name": "마스터",
+        "role": "admin",
+        "must_change_pw": false
+    },
+    {
+        "id": "20210063",
+        "password": "qwer1234",
+        "name": "김형철",
+        "role": "user",
+        "must_change_pw": false
+    },
+    {
+        "id": "20130030",
+        "password": "1234",
+        "name": "서동일",
+        "role": "user",
+        "must_change_pw": false
+    }
+]

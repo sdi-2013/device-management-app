@@ -1,0 +1,7 @@
+streamlit
+pandas
+psycopg2-binary
+python-dotenv
+opencv-python-headless
+qrcode[pil]
+openpyxl
