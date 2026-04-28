@@ -7,7 +7,7 @@ from views.login import render_login_page
 
 # --- Configuration ---
 def configure_streamlit():
-    st.set_page_config(page_title="장비관리 시스템", layout="wide", page_icon="⚙️")
+    st.set_page_config(page_title="장비관리 시스템", layout="wide", page_icon="⚙️", initial_sidebar_state="expanded")
     
     # CSS
     st.markdown("""<style>
@@ -17,6 +17,10 @@ def configure_streamlit():
         [data-testid="stToolbar"] { display: none !important; }
         [data-testid="stDecoration"] { display: none !important; }
         header[data-testid="stHeader"] { background: transparent !important; }
+        
+        /* 스트리밋 하단 광고(Hosted with Streamlit) 완벽 제거 */
+        .viewerBadge_container { display: none !important; }
+        .viewerBadge_link { display: none !important; }
         
         /* 모바일 그리드 액션 버튼 가로 배치 강제 */
         @media (max-width: 768px) {
@@ -117,9 +121,9 @@ if __name__ == "__main__":
         render_login_page()
     else:
         # Header / Logout (상단 구석에 작게 배치)
-        hc1, hc2 = st.columns([8, 2])
-        hc1.markdown(f"<div style='font-size:0.9em; color:gray; padding-top:10px; text-align:right;'>🧑‍💼 <b>{st.session_state.user_info.get('name', '사용자')}</b>님 접속중</div>", unsafe_allow_html=True)
-        if hc2.button("로그아웃", key="btn_logout_top", use_container_width=True):
+        hc1, hc2 = st.columns([9, 1])
+        hc1.markdown(f"<div style='font-size:0.9em; color:gray; padding-top:10px; text-align:right;'>🧑‍💼 <b>{st.session_state.user_info.get('name', '사용자')}</b>님</div>", unsafe_allow_html=True)
+        if hc2.button("🚪", key="btn_logout_top", use_container_width=True, help="로그아웃"):
             AuthManager.logout()
             st.rerun()
             
