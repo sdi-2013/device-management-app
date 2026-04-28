@@ -68,6 +68,9 @@ def render_navigation():
             z-index: 999999;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
             gap: 0 !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
         }
         
         @media (prefers-color-scheme: dark) {
