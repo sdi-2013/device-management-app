@@ -51,11 +51,31 @@ class PooledConnectionWrapper:
         except Exception:
             pass
 
+import threading
+
+_local = threading.local()
+
 def get_connection():
     """Returns a pooled PostgreSQL database connection."""
     pool = get_pool()
-    conn = pool.getconn()
-    return PooledConnectionWrapper(conn, pool)
+    conn = PooledConnectionWrapper(pool.getconn(), pool)
+    
+    # 스레드별로 열린 커넥션들을 추적하여 나중에 한 번에 닫을 수 있게 함
+    if not hasattr(_local, 'conns'):
+        _local.conns = []
+    _local.conns.append(conn)
+    
+    return conn
+
+def close_all_thread_connections():
+    """현재 스레드에서 열려있는 모든 DB 커넥션을 안전하게 풀에 반환합니다."""
+    if hasattr(_local, 'conns'):
+        for conn in _local.conns:
+            try:
+                conn.close()
+            except Exception:
+                pass
+        _local.conns.clear()
 
 import pandas as pd
 
