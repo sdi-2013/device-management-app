@@ -13,19 +13,36 @@ def configure_streamlit():
     st.markdown("""<style>
         /* .stApp { font-family: 'Pretendard', sans-serif; } */
         
-        /* Hide Streamlit Native Header (우측 상단 ... 메뉴 폰트 깨짐 방지) */
-        header[data-testid="stHeader"] { display: none !important; }
+        /* Hide Streamlit Native Header Toolbar (우측 상단 ... 메뉴 폰트 깨짐 방지) */
+        [data-testid="stToolbar"] { display: none !important; }
+        [data-testid="stDecoration"] { display: none !important; }
+        header[data-testid="stHeader"] { background: transparent !important; }
         
-        /* Hide Expander Icons to prevent text overlap in intranet (offline font load failure) */
-        details[data-testid="stExpander"] summary svg,
-        details[data-testid="stExpander"] summary .st-icon,
-        details[data-testid="stExpander"] summary [data-testid="stIconMaterial"] { display: none !important; }
+        /* 모바일 그리드 액션 버튼 가로 배치 강제 */
+        @media (max-width: 768px) {
+            div[data-testid="stHorizontalBlock"]:has(.grid-action-buttons) {
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                padding-bottom: 5px;
+            }
+            div[data-testid="stHorizontalBlock"]:has(.grid-action-buttons) > div[data-testid="stColumn"] {
+                min-width: max-content !important;
+                width: auto !important;
+                flex: 1 1 0% !important;
+            }
+        }
         
         /* Disable ALL animations and transitions for instant screen switching */
         *, *::before, *::after {
             animation: none !important;
             transition: none !important;
         }
+        
+        /* Hide Expander Icons to prevent text overlap in intranet (offline font load failure) */
+        details[data-testid="stExpander"] summary svg,
+        details[data-testid="stExpander"] summary .st-icon,
+        details[data-testid="stExpander"] summary [data-testid="stIconMaterial"] { display: none !important; }
         
         /* Top Navigation Button Styling */
         .top-nav-btn {
