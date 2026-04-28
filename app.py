@@ -25,6 +25,12 @@ def configure_streamlit():
         details[data-testid="stExpander"] summary .st-icon,
         details[data-testid="stExpander"] summary [data-testid="stIconMaterial"] { display: none !important; }
         
+        /* Disable ALL animations and transitions for instant screen switching */
+        *, *::before, *::after {
+            animation: none !important;
+            transition: none !important;
+        }
+        
         /* Top Navigation Button Styling */
         .top-nav-btn {
             width: 100%;
