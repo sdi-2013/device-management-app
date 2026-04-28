@@ -1,7 +1,9 @@
 import psycopg2
+from psycopg2.pool import ThreadedConnectionPool
 from psycopg2.extras import RealDictCursor
 import os
 import logging
+import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,15 +11,42 @@ DB_URL = os.environ.get("DATABASE_URL")
 if DB_URL and "?" in DB_URL:
     DB_URL = DB_URL.split("?")[0]
 
-def get_connection():
-    """Returns a PostgreSQL database connection."""
+@st.cache_resource
+def get_pool():
     if not DB_URL:
         logging.error("DATABASE_URL is not set.")
         raise ValueError("DATABASE_URL is not set in environment variables.")
-    
-    # Connect using RealDictCursor so rows can be accessed like dictionaries
-    conn = psycopg2.connect(DB_URL, cursor_factory=RealDictCursor)
-    return conn
+    # Initialize a pool with 1 min and 20 max connections
+    return ThreadedConnectionPool(1, 20, DB_URL)
+
+class PooledConnectionWrapper:
+    def __init__(self, conn, pool):
+        self._conn = conn
+        self._pool = pool
+        
+    def cursor(self, *args, **kwargs):
+        kwargs.setdefault('cursor_factory', RealDictCursor)
+        return self._conn.cursor(*args, **kwargs)
+        
+    def commit(self):
+        self._conn.commit()
+        
+    def rollback(self):
+        self._conn.rollback()
+        
+    def close(self):
+        # Return connection to the pool instead of closing it
+        try:
+            self._conn.rollback()
+        except Exception:
+            pass
+        self._pool.putconn(self._conn)
+
+def get_connection():
+    """Returns a pooled PostgreSQL database connection."""
+    pool = get_pool()
+    conn = pool.getconn()
+    return PooledConnectionWrapper(conn, pool)
 
 import pandas as pd
 
@@ -35,8 +64,19 @@ def read_df(query, conn, params=None):
         return pd.DataFrame(data)
 
 def init_db():
-    """Database initialization is now handled by PostgreSQL migration scripts."""
-    pass
+    """Create indexes for performance optimization."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as c:
+            c.execute("CREATE INDEX IF NOT EXISTS idx_processes_asset_id ON processes(asset_id);")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_processes_ip ON processes(ip);")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_assets_status ON assets(status);")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_common_codes_group_code ON common_codes(group_code);")
+        conn.commit()
+    except Exception as e:
+        logging.error(f"Failed to create indexes: {e}")
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     init_db()

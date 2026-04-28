@@ -1,6 +1,7 @@
 from modules.database import get_connection, read_df
 from modules.utils import get_current_date_str
 import pandas as pd
+import streamlit as st
 
 class AssetService:
     @staticmethod
@@ -459,6 +460,7 @@ class LogService:
 
 class CodeService:
     @staticmethod
+    @st.cache_data(ttl=300)
     def get_common_codes(group_code=None, active_only=True, ref_id=None):
         conn = get_connection()
         query = "SELECT * FROM common_codes"
@@ -501,6 +503,7 @@ class CodeService:
             c.execute("INSERT INTO common_codes (group_code, code_id, code_name, sort_order, ref_id) VALUES (%s, %s, %s, %s, %s)",
                       (data['group_code'], data['code_id'], data['code_name'], max_sort + 1, ref))
             conn.commit()
+            st.cache_data.clear()
             return True, "등록되었습니다."
         except Exception as e:
             return False, str(e)
@@ -529,6 +532,7 @@ class CodeService:
             sql = f"UPDATE common_codes SET {', '.join(fields)} WHERE group_code = %s AND code_id = %s"
             conn.cursor().execute(sql, values)
             conn.commit()
+            st.cache_data.clear()
             return True, "수정되었습니다."
         except Exception as e: return False, str(e)
         finally: conn.close()
@@ -540,11 +544,13 @@ class CodeService:
              placeholders = ','.join(['%s'] * len(code_ids))
              conn.cursor().execute(f"DELETE FROM common_codes WHERE group_code = %s AND code_id IN ({placeholders})", (group_code, *code_ids))
              conn.commit()
+             st.cache_data.clear()
              return True, f"{len(code_ids)}건 삭제됨"
         except Exception as e: return False, str(e)
         finally: conn.close()
 
     @staticmethod
+    @st.cache_data(ttl=300)
     def get_failure_codes(device_type=None):
         conn = get_connection()
         query = "SELECT * FROM failure_codes"
@@ -567,6 +573,7 @@ class CodeService:
             conn.cursor().execute("INSERT INTO failure_codes (id, device_type, category, detail, sort_order) VALUES (%s, %s, %s, %s, 0)",
                          (str(uuid.uuid4()), device_type, category, detail))
             conn.commit()
+            st.cache_data.clear()
             return True, "등록완료"
         except Exception as e: return False, str(e)
         finally: conn.close()
@@ -588,6 +595,7 @@ class CodeService:
             sql = f"UPDATE failure_codes SET {', '.join(fields)} WHERE id = %s"
             conn.cursor().execute(sql, values)
             conn.commit()
+            st.cache_data.clear()
             return True, "수정완료"
         except Exception as e: return False, str(e)
         finally: conn.close()
@@ -599,6 +607,7 @@ class CodeService:
              placeholders = ','.join(['%s'] * len(ids))
              conn.cursor().execute(f"DELETE FROM failure_codes WHERE id IN ({placeholders})", ids)
              conn.commit()
+             st.cache_data.clear()
              return True, f"{len(ids)}건 삭제됨"
         except Exception as e: return False, str(e)
         finally: conn.close()
