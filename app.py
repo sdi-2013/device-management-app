@@ -105,16 +105,13 @@ if __name__ == "__main__":
     else:
         # Header / Logout (상단 구석에 작게 배치)
         hc1, hc2 = st.columns([8, 2])
-        hc1.markdown(f"<div style='font-size:0.85em; color:gray; padding-top:10px;'>👋 <b>{st.session_state.user_info['name']}</b>님 접속중</div>", unsafe_allow_html=True)
+        hc1.markdown(f"<div style='font-size:0.9em; color:gray; padding-top:10px; text-align:right;'>🧑‍💼 <b>{st.session_state.user_info.get('name', '사용자')}</b>님 접속중</div>", unsafe_allow_html=True)
         if hc2.button("로그아웃", key="btn_logout_top", use_container_width=True):
-            st.session_state.logged_in = False
-            st.session_state.user_info = {}
-            try: st.query_params.clear()
-            except: pass
+            AuthManager.logout()
             st.rerun()
             
-        from views.sidebar import render_top_nav
-        render_top_nav()
+        from views.sidebar import render_navigation
+        render_navigation()
         
         page = st.session_state.active_page
         
