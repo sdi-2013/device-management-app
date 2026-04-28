@@ -32,77 +32,77 @@ def render_inspection():
         
         st.caption("💡 검색어 입력 후 'Enter' 또는 돋보기 버튼을 누르세요.")
             
-            # Use raw query
-            search_query = search_query_raw
+        # Use raw query
+        search_query = search_query_raw
+        
+        filtered_assets = pd.DataFrame()
+        
+        target_asset = None
+        
+        if search_query:
+            # Filter Logic
+            exact_match = assets[assets['id'] == search_query]
+            id_match = assets[assets['id'].str.contains(search_query, case=False) & (assets['id'] != search_query)]
+            other_match = assets[assets['search_label'].str.contains(search_query, case=False) & ~assets['id'].str.contains(search_query, case=False)]
             
-            filtered_assets = pd.DataFrame()
+            # Chosung Logic
+            chosung_query = get_chosung(search_query)
+            chosung_match = pd.DataFrame()
+            if chosung_query:
+                mask = (assets['model_chosung'].str.contains(chosung_query, case=False)) | (assets['location_chosung'].str.contains(chosung_query, case=False))
+                chosung_match = assets[mask]
             
-            target_asset = None
+            # Concatenate with priority
+            filtered_assets = pd.concat([exact_match, id_match, other_match, chosung_match])
             
-            if search_query:
-                # Filter Logic
-                exact_match = assets[assets['id'] == search_query]
-                id_match = assets[assets['id'].str.contains(search_query, case=False) & (assets['id'] != search_query)]
-                other_match = assets[assets['search_label'].str.contains(search_query, case=False) & ~assets['id'].str.contains(search_query, case=False)]
-                
-                # Chosung Logic
-                chosung_query = get_chosung(search_query)
-                chosung_match = pd.DataFrame()
-                if chosung_query:
-                    mask = (assets['model_chosung'].str.contains(chosung_query, case=False)) | (assets['location_chosung'].str.contains(chosung_query, case=False))
-                    chosung_match = assets[mask]
-                
-                # Concatenate with priority
-                filtered_assets = pd.concat([exact_match, id_match, other_match, chosung_match])
-                
-                # Remove duplicates just in case
-                filtered_assets = filtered_assets.drop_duplicates(subset=['id'])
-                
-            else:
-                # Show all? Too many. Show nothing or recent?
-                # User said "Enter 안쳐도 아래쪽에 바로 보여주면".
-                # If empty, showing nothing is cleaner OR show all.
-                # Let's show all but top 100?
-                filtered_assets = assets.head(100)
-
-            # Display List
-            if not filtered_assets.empty:
-                # Determine Auto-Collapse State
-                # Check directly in session state if selection exists for this key
-                # Key format: f"asset_sel_df_{search_query}"
-                # We default to Expanded (True). If selection exists, Collapse (False).
-                df_key = f"asset_sel_df_{search_query}"
-                is_expanded = True
-                
-                # Check session state for selection
-                ss_data = st.session_state.get(df_key)
-                if ss_data and ss_data.get("selection") and ss_data["selection"].get("rows"):
-                     is_expanded = False
-                
-                with st.expander(f"검색 결과 ({len(filtered_assets)}건)", expanded=is_expanded):
-                    # Show Dataframe with Selection
-                    # Columns to show: id, model, location, status
-                    display_df = filtered_assets[['id', 'model', 'location', 'status']].copy()
-                    display_df.rename(columns={'id': 'ID', 'model': '모델', 'location': '위치', 'status': '상태'}, inplace=True)
-                    
-                    # Use st.dataframe selection (Streamlit 1.35+)
-                    event = st.dataframe(
-                        display_df,
-                        use_container_width=True,
-                        hide_index=True,
-                        on_select="rerun",
-                        selection_mode="single-row",
-                        key=df_key
-                    )
-                    
-                    if event.selection.rows:
-                        idx = event.selection.rows[0]
-                        selected_id = display_df.iloc[idx]['ID']
-                        target_asset = assets[assets['id'] == selected_id].iloc[0]
-                    elif len(filtered_assets) == 1 and search_query:
-                         pass
+            # Remove duplicates just in case
+            filtered_assets = filtered_assets.drop_duplicates(subset=['id'])
+            
         else:
-            if search_query: st.warning("검색 결과가 없습니다.")
+            # Show all? Too many. Show nothing or recent?
+            # User said "Enter 안쳐도 아래쪽에 바로 보여주면".
+            # If empty, showing nothing is cleaner OR show all.
+            # Let's show all but top 100?
+            filtered_assets = assets.head(100)
+
+        # Display List
+        if not filtered_assets.empty:
+            # Determine Auto-Collapse State
+            # Check directly in session state if selection exists for this key
+            # Key format: f"asset_sel_df_{search_query}"
+            # We default to Expanded (True). If selection exists, Collapse (False).
+            df_key = f"asset_sel_df_{search_query}"
+            is_expanded = True
+            
+            # Check session state for selection
+            ss_data = st.session_state.get(df_key)
+            if ss_data and ss_data.get("selection") and ss_data["selection"].get("rows"):
+                 is_expanded = False
+            
+            with st.expander(f"검색 결과 ({len(filtered_assets)}건)", expanded=is_expanded):
+                # Show Dataframe with Selection
+                # Columns to show: id, model, location, status
+                display_df = filtered_assets[['id', 'model', 'location', 'status']].copy()
+                display_df.rename(columns={'id': 'ID', 'model': '모델', 'location': '위치', 'status': '상태'}, inplace=True)
+                
+                # Use st.dataframe selection (Streamlit 1.35+)
+                event = st.dataframe(
+                    display_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    on_select="rerun",
+                    selection_mode="single-row",
+                    key=df_key
+                )
+                
+                if event.selection.rows:
+                    idx = event.selection.rows[0]
+                    selected_id = display_df.iloc[idx]['ID']
+                    target_asset = assets[assets['id'] == selected_id].iloc[0]
+                elif len(filtered_assets) == 1 and search_query:
+                     pass
+    else:
+        if search_query: st.warning("검색 결과가 없습니다.")
 
     # --- 3. Inspection Action Section ---
     if target_asset is not None:
