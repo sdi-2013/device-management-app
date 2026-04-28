@@ -13,10 +13,6 @@ def configure_streamlit():
     st.markdown("""<style>
         /* .stApp { font-family: 'Pretendard', sans-serif; } */
         
-        /* Hide Streamlit Native Sidebar completely */
-        [data-testid="collapsedControl"] { display: none !important; }
-        section[data-testid="stSidebar"] { display: none !important; }
-        
         /* Hide Streamlit Native Header (우측 상단 ... 메뉴 폰트 깨짐 방지) */
         header[data-testid="stHeader"] { display: none !important; }
         
