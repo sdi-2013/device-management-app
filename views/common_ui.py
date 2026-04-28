@@ -110,6 +110,7 @@ def render_grid_with_edit(
                 if v.get('select'): has_sel_pre = True
         
         st.markdown("<div style='margin-bottom: 5px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div class='grid-action-buttons'></div>", unsafe_allow_html=True)
         ac1, ac2, ac3, ac4, spacer = st.columns([1.2, 1.2, 1.2, 1.2, 5], gap="small")
         
         with ac1:

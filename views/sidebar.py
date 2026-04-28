@@ -90,7 +90,8 @@ def render_navigation():
             align-items: center;
             justify-content: center;
             flex: 1 1 0% !important;
-            width: auto !important;
+            width: 25% !important;
+            min-width: 0 !important;
         }
         
         /* 투명 버튼 오버레이 트릭 (실제 클릭을 받는 투명 버튼) */
