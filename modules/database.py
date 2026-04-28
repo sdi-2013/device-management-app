@@ -16,13 +16,14 @@ def get_pool():
     if not DB_URL:
         logging.error("DATABASE_URL is not set.")
         raise ValueError("DATABASE_URL is not set in environment variables.")
-    # Initialize a pool with 1 min and 20 max connections
-    return ThreadedConnectionPool(1, 20, DB_URL)
+    # Initialize a pool with 1 min and 50 max connections
+    return ThreadedConnectionPool(1, 50, DB_URL)
 
 class PooledConnectionWrapper:
     def __init__(self, conn, pool):
         self._conn = conn
         self._pool = pool
+        self._closed = False
         
     def cursor(self, *args, **kwargs):
         kwargs.setdefault('cursor_factory', RealDictCursor)
@@ -35,12 +36,20 @@ class PooledConnectionWrapper:
         self._conn.rollback()
         
     def close(self):
-        # Return connection to the pool instead of closing it
+        if not self._closed:
+            # Return connection to the pool instead of closing it
+            try:
+                self._conn.rollback()
+            except Exception:
+                pass
+            self._pool.putconn(self._conn)
+            self._closed = True
+
+    def __del__(self):
         try:
-            self._conn.rollback()
+            self.close()
         except Exception:
             pass
-        self._pool.putconn(self._conn)
 
 def get_connection():
     """Returns a pooled PostgreSQL database connection."""
