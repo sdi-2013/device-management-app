@@ -117,53 +117,57 @@ if __name__ == "__main__":
             st.session_state.active_category = "history"
 
     # Routing
-    if not st.session_state.logged_in:
-        render_login_page()
-    else:
-        # Header / Logout (상단 구석에 작게 배치)
-        hc1, hc2 = st.columns([9, 1])
-        hc1.markdown(f"<div style='font-size:0.9em; color:gray; padding-top:10px; text-align:right;'>🧑‍💼 <b>{st.session_state.user_info.get('name', '사용자')}</b>님</div>", unsafe_allow_html=True)
-        if hc2.button("🚪", key="btn_logout_top", use_container_width=True, help="로그아웃"):
-            AuthManager.logout()
-            st.rerun()
-            
-        from views.sidebar import render_navigation
-        render_navigation()
-        
-        page = st.session_state.active_page
-        
-        if page == "asset_master":
-            from views.assets import render_asset_master
-            render_asset_master()
-        elif page == "process_master":
-            from views.processes import render_process_master
-            render_process_master()
-        elif page == "inspection":
-            from views.inspection import render_inspection
-            render_inspection()
-        elif page == "status":
-            from views.status import render_status
-            render_status()
-        elif page == "fail_history":
-            from views.history import render_fail_history
-            render_fail_history()
-        elif page == "asset_movement":
-            from views.history import render_asset_movement
-            render_asset_movement()
-        elif page == "user_mgmt":
-            from views.admin import render_user_mgmt
-            render_user_mgmt()
-        elif page == "code_master":
-            from views.admin import render_code_master
-            render_code_master()
-        elif page == "qr_gen":
-            from views.qr_gen import render_qr_gen
-            render_qr_gen()
-        elif page == "upload":
-            from views.upload import render_upload
-            render_upload()
-        elif page == "activity_logs":
-            from views.logs import render_activity_logs
-            render_activity_logs()
+    try:
+        if not st.session_state.logged_in:
+            render_login_page()
         else:
-            st.info(f"Page '{page}' is under construction.")
+            # Header / Logout (상단 구석에 작게 배치)
+            hc1, hc2 = st.columns([9, 1])
+            hc1.markdown(f"<div style='font-size:0.9em; color:gray; padding-top:10px; text-align:right;'>🧑‍💼 <b>{st.session_state.user_info.get('name', '사용자')}</b>님</div>", unsafe_allow_html=True)
+            if hc2.button("🚪", key="btn_logout_top", use_container_width=True, help="로그아웃"):
+                AuthManager.logout()
+                st.rerun()
+                
+            from views.sidebar import render_navigation
+            render_navigation()
+            
+            page = st.session_state.active_page
+            
+            if page == "asset_master":
+                from views.assets import render_asset_master
+                render_asset_master()
+            elif page == "process_master":
+                from views.processes import render_process_master
+                render_process_master()
+            elif page == "inspection":
+                from views.inspection import render_inspection
+                render_inspection()
+            elif page == "status":
+                from views.status import render_status
+                render_status()
+            elif page == "fail_history":
+                from views.history import render_fail_history
+                render_fail_history()
+            elif page == "asset_movement":
+                from views.history import render_asset_movement
+                render_asset_movement()
+            elif page == "user_mgmt":
+                from views.admin import render_user_mgmt
+                render_user_mgmt()
+            elif page == "code_master":
+                from views.admin import render_code_master
+                render_code_master()
+            elif page == "qr_gen":
+                from views.qr_gen import render_qr_gen
+                render_qr_gen()
+            elif page == "upload":
+                from views.upload import render_upload
+                render_upload()
+            elif page == "activity_logs":
+                from views.logs import render_activity_logs
+                render_activity_logs()
+            else:
+                st.info(f"Page '{page}' is under construction.")
+    finally:
+        from modules.database import close_all_thread_connections
+        close_all_thread_connections()
