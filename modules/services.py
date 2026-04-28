@@ -1,5 +1,5 @@
 from modules.database import get_connection, read_df
-from modules.utils import get_current_date_str
+from modules.utils import get_current_date_str, get_kst_now
 import pandas as pd
 import streamlit as st
 
@@ -295,7 +295,7 @@ class ProcessService:
             c.execute("""
                 INSERT INTO maintenance_logs (id, asset_id, action_type, content, technician, timestamp, location_snapshot)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (str(uuid.uuid4()), old_asset_id, "교체", log_content, technician, datetime.now().strftime("%Y-%m-%d %H:%M"), location_snapshot))
+            """, (str(uuid.uuid4()), old_asset_id, "교체", log_content, technician, get_kst_now().strftime("%Y-%m-%d %H:%M"), location_snapshot))
             
             conn.commit()
             return True, f"교체 완료 ({old_asset_id} -> {new_asset_id})"
@@ -333,7 +333,7 @@ class ProcessService:
             c.execute("""
                 INSERT INTO maintenance_logs (id, asset_id, action_type, content, technician, timestamp, location_snapshot)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (str(uuid.uuid4()), asset_id, "수리회수", reason, technician, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), location_snapshot))
+            """, (str(uuid.uuid4()), asset_id, "수리회수", reason, technician, get_kst_now().strftime("%Y-%m-%d %H:%M:%S"), location_snapshot))
             
             conn.commit()
             return True, "회수(수리) 처리 완료"
@@ -356,7 +356,7 @@ class LogService:
             c.execute("""
                 INSERT INTO maintenance_logs (id, asset_id, action_type, content, technician, timestamp, location_snapshot)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (str(uuid.uuid4()), asset_id, action_type, content, technician, datetime.now().strftime("%Y-%m-%d %H:%M"), location_snapshot))
+            """, (str(uuid.uuid4()), asset_id, action_type, content, technician, get_kst_now().strftime("%Y-%m-%d %H:%M"), location_snapshot))
             conn.commit()
             return True, "저장되었습니다."
         except Exception as e:
@@ -389,7 +389,7 @@ class LogService:
         from datetime import datetime
         c = conn.cursor()
         c.execute("INSERT INTO movement_logs (id, asset_id, action_type, prev_loc, curr_loc, date) VALUES (%s, %s, %s, %s, %s, %s)",
-                  (str(uuid.uuid4()), asset_id, action, prev_loc, new_loc, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                  (str(uuid.uuid4()), asset_id, action, prev_loc, new_loc, get_kst_now().strftime("%Y-%m-%d %H:%M:%S")))
 
     @staticmethod
     def update_maintenance_logs(updates):

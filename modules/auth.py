@@ -2,6 +2,7 @@ import hashlib
 import uuid
 import secrets
 from datetime import datetime, timedelta
+from modules.utils import get_kst_now
 from .database import get_connection
 
 class AuthManager:
@@ -32,7 +33,7 @@ class AuthManager:
     @staticmethod
     def create_session(user_id):
         token = secrets.token_urlsafe(32)
-        created_at = datetime.now()
+        created_at = get_kst_now()
         expires_at = created_at + timedelta(hours=12) # 12 hour session
         
         conn = get_connection()
@@ -82,7 +83,7 @@ class AuthManager:
         
         if session:
             expires = datetime.fromisoformat(session['expires_at'])
-            if datetime.now() < expires:
+            if get_kst_now() < expires:
                 return {"id": session['user_id'], "name": session['name'], "role": session['role']}
             else:
                 # Cleanup expired
@@ -102,7 +103,7 @@ class AuthManager:
             # Create default admin
             pw_hash = AuthManager.hash_password("hdweld@123") # Default password, shoud be changed
             c.execute("INSERT INTO users (id, password_hash, name, role, created_at) VALUES (%s, %s, %s, %s, %s)",
-                      ("admin", pw_hash, "마스터", "admin", datetime.now().isoformat()))
+                      ("admin", pw_hash, "마스터", "admin", get_kst_now().isoformat()))
             conn.commit()
             print("Admin user created (admin / hdweld@123)")
         conn.close()

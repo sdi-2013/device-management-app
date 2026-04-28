@@ -1,7 +1,11 @@
 import qrcode
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import uuid
+
+def get_kst_now():
+    """Returns datetime.now() in KST (UTC+9)"""
+    return datetime.now(timezone(timedelta(hours=9)))
 
 def generate_qr_image(data):
     """Generates a QR code image bytes for the given data."""
@@ -12,11 +16,11 @@ def generate_qr_image(data):
 
 def get_current_time_str():
     """Returns current time in YYYY-MM-DD HH:MM format."""
-    return datetime.now().strftime("%Y-%m-%d %H:%M")
+    return get_kst_now().strftime("%Y-%m-%d %H:%M")
 
 def get_current_date_str():
     """Returns current date in YYYY-MM-DD format."""
-    return datetime.now().strftime("%Y-%m-%d")
+    return get_kst_now().strftime("%Y-%m-%d")
 
 def normalize_id(val):
     """Normalizes ID strings (handles float string issues from pandas)."""
